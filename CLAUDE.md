@@ -65,3 +65,4 @@ See [docs/building-ghostty.md](docs/building-ghostty.md) for full details.
 
 - No commenting allowed in the codebase
 - All code must be self-explanatory and cleanly structured
+- Use early returns instead of nested conditionals

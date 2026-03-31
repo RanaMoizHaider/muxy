@@ -15,9 +15,13 @@ struct MainWindow: View {
 
                 ZStack {
                     MuxyTheme.bg
-                    if let project = activeProject {
+                    ForEach(projectStore.projects) { project in
+                        let isActive = project.id == appState.activeProjectID
                         TerminalArea(project: project)
-                    } else {
+                            .opacity(isActive ? 1 : 0)
+                            .allowsHitTesting(isActive)
+                    }
+                    if activeProject == nil {
                         WelcomeView()
                     }
                 }

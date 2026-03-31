@@ -5,10 +5,13 @@ struct TerminalArea: View {
     @Environment(AppState.self) private var appState
 
     var body: some View {
-        Group {
-            if let tab = appState.activeTab(for: project.id) {
+        ZStack {
+            ForEach(appState.tabsForProject(project.id)) { tab in
+                let isActive = tab.id == appState.activeTabID[project.id]
                 PaneTree(tab: tab, projectPath: project.path)
                     .id(tab.id)
+                    .opacity(isActive ? 1 : 0)
+                    .allowsHitTesting(isActive)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .muxyCreateNewTab)) { n in

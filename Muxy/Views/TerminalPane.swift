@@ -7,13 +7,20 @@ struct TerminalPane: View {
     let onFocus: () -> Void
 
     var body: some View {
-        TerminalBridge(state: state, onFocus: onFocus)
+        TerminalBridge(state: state, focused: focused, onFocus: onFocus)
     }
 }
 
 struct TerminalBridge: NSViewRepresentable {
     let state: TerminalPaneState
+    let focused: Bool
     let onFocus: () -> Void
+
+    final class Coordinator {
+        var previouslyFocused = false
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> GhosttyTerminalNSView {
         let view = GhosttyTerminalNSView(workingDirectory: state.projectPath)
@@ -21,11 +28,23 @@ struct TerminalBridge: NSViewRepresentable {
         view.onTitleChange = { [weak state] title in
             state?.title = title
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            view.window?.makeFirstResponder(view)
+        context.coordinator.previouslyFocused = focused
+        if focused {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                view.window?.makeFirstResponder(view)
+            }
         }
         return view
     }
 
-    func updateNSView(_ nsView: GhosttyTerminalNSView, context: Context) {}
+    func updateNSView(_ nsView: GhosttyTerminalNSView, context: Context) {
+        nsView.onFocus = onFocus
+        let wasFocused = context.coordinator.previouslyFocused
+        context.coordinator.previouslyFocused = focused
+        if focused && !wasFocused {
+            DispatchQueue.main.async {
+                nsView.window?.makeFirstResponder(nsView)
+            }
+        }
+    }
 }
