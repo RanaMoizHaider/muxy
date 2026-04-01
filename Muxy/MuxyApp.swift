@@ -9,13 +9,15 @@ struct MuxyApp: App {
 
     init() {
         let environment = AppEnvironment.live
-        _appState = State(initialValue: AppState(
-            selectionStore: environment.selectionStore,
-            terminalViews: environment.terminalViews
-        ))
-        _projectStore = State(initialValue: ProjectStore(
-            persistence: environment.projectPersistence
-        ))
+        _appState = State(
+            initialValue: AppState(
+                selectionStore: environment.selectionStore,
+                terminalViews: environment.terminalViews
+            ))
+        _projectStore = State(
+            initialValue: ProjectStore(
+                persistence: environment.projectPersistence
+            ))
     }
 
     var body: some Scene {
@@ -43,7 +45,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @MainActor private func setAppIcon() {
-        guard let url = Bundle.module.url(forResource: "AppIcon", withExtension: "png") else { return }
+        guard let url = Bundle.module.url(forResource: "AppIcon", withExtension: "png") else {
+            return
+        }
         guard let image = NSImage(contentsOf: url) else { return }
         image.size = NSSize(width: 512, height: 512)
         NSApp.applicationIconImage = image
