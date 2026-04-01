@@ -6,12 +6,12 @@ enum SplitDirection: Sendable {
 }
 
 enum SplitNode: Identifiable {
-    case pane(TerminalPaneState)
+    case tabArea(TabArea)
     indirect case split(SplitBranch)
 
     var id: UUID {
         switch self {
-        case .pane(let pane): pane.id
+        case .tabArea(let area): area.id
         case .split(let branch): branch.id
         }
     }
@@ -34,42 +34,49 @@ final class SplitBranch: Identifiable {
     }
 }
 
+@MainActor
 extension SplitNode {
-    func splitting(paneID: UUID, direction: SplitDirection, newPane: TerminalPaneState) -> SplitNode {
+    func splitting(areaID: UUID, direction: SplitDirection, projectPath: String) -> (node: SplitNode, newAreaID: UUID?) {
         switch self {
-        case .pane(let pane) where pane.id == paneID:
-            return .split(SplitBranch(
+        case .tabArea(let area) where area.id == areaID:
+            let newArea = TabArea(projectPath: projectPath)
+            let node = SplitNode.split(SplitBranch(
                 direction: direction,
-                first: .pane(pane),
-                second: .pane(newPane)
+                first: .tabArea(area),
+                second: .tabArea(newArea)
             ))
-        case .pane:
-            return self
+            return (node, newArea.id)
+        case .tabArea:
+            return (self, nil)
         case .split(let branch):
-            branch.first = branch.first.splitting(paneID: paneID, direction: direction, newPane: newPane)
-            branch.second = branch.second.splitting(paneID: paneID, direction: direction, newPane: newPane)
-            return .split(branch)
+            let (newFirst, id1) = branch.first.splitting(areaID: areaID, direction: direction, projectPath: projectPath)
+            let (newSecond, id2) = branch.second.splitting(areaID: areaID, direction: direction, projectPath: projectPath)
+            branch.first = newFirst
+            branch.second = newSecond
+            return (.split(branch), id1 ?? id2)
         }
     }
 
-    func removing(paneID: UUID) -> SplitNode? {
+    func removing(areaID: UUID) -> SplitNode? {
         switch self {
-        case .pane(let pane) where pane.id == paneID:
+        case .tabArea(let area) where area.id == areaID:
             return nil
-        case .pane:
+        case .tabArea:
             return self
         case .split(let branch):
-            if case .pane(let p) = branch.first, p.id == paneID {
+            if case .tabArea(let a) = branch.first, a.id == areaID {
                 return branch.second
             }
-            if case .pane(let p) = branch.second, p.id == paneID {
+            if case .tabArea(let a) = branch.second, a.id == areaID {
                 return branch.first
             }
-            if let newFirst = branch.first.removing(paneID: paneID) {
+            if branch.first.containsArea(id: areaID),
+               let newFirst = branch.first.removing(areaID: areaID) {
                 branch.first = newFirst
                 return .split(branch)
             }
-            if let newSecond = branch.second.removing(paneID: paneID) {
+            if branch.second.containsArea(id: areaID),
+               let newSecond = branch.second.removing(areaID: areaID) {
                 branch.second = newSecond
                 return .split(branch)
             }
@@ -77,19 +84,27 @@ extension SplitNode {
         }
     }
 
-    func allPanes() -> [TerminalPaneState] {
+    func containsArea(id: UUID) -> Bool {
         switch self {
-        case .pane(let pane): [pane]
+        case .tabArea(let area): area.id == id
         case .split(let branch):
-            branch.first.allPanes() + branch.second.allPanes()
+            branch.first.containsArea(id: id) || branch.second.containsArea(id: id)
         }
     }
 
-    func findPane(id: UUID) -> TerminalPaneState? {
+    func allAreas() -> [TabArea] {
         switch self {
-        case .pane(let pane): pane.id == id ? pane : nil
+        case .tabArea(let area): [area]
         case .split(let branch):
-            branch.first.findPane(id: id) ?? branch.second.findPane(id: id)
+            branch.first.allAreas() + branch.second.allAreas()
+        }
+    }
+
+    func findArea(id: UUID) -> TabArea? {
+        switch self {
+        case .tabArea(let area): area.id == id ? area : nil
+        case .split(let branch):
+            branch.first.findArea(id: id) ?? branch.second.findArea(id: id)
         }
     }
 }

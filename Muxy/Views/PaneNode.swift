@@ -2,28 +2,34 @@ import SwiftUI
 
 struct PaneNode: View {
     let node: SplitNode
-    let focusedID: UUID?
-    let isActiveTab: Bool
-    let onFocus: (UUID) -> Void
+    let focusedAreaID: UUID?
+    let isActiveProject: Bool
+    let onFocusArea: (UUID) -> Void
+    let onCloseTab: (UUID, UUID) -> Void
     let onSplit: (UUID, SplitDirection) -> Void
-    let onClose: (UUID) -> Void
+    let onCloseArea: (UUID) -> Void
 
     var body: some View {
         switch node {
-        case .pane(let state):
-            TerminalPane(
-                state: state,
-                focused: isActiveTab && focusedID == state.id,
-                onFocus: { onFocus(state.id) }
+        case .tabArea(let area):
+            TabAreaView(
+                area: area,
+                isFocused: focusedAreaID == area.id,
+                isActiveProject: isActiveProject,
+                onFocus: { onFocusArea(area.id) },
+                onCloseTab: { tabID in onCloseTab(area.id, tabID) },
+                onSplit: { dir in onSplit(area.id, dir) },
+                onClose: { onCloseArea(area.id) }
             )
         case .split(let branch):
             SplitContainer(
                 branch: branch,
-                focusedID: focusedID,
-                isActiveTab: isActiveTab,
-                onFocus: onFocus,
+                focusedAreaID: focusedAreaID,
+                isActiveProject: isActiveProject,
+                onFocusArea: onFocusArea,
+                onCloseTab: onCloseTab,
                 onSplit: onSplit,
-                onClose: onClose
+                onCloseArea: onCloseArea
             )
         }
     }

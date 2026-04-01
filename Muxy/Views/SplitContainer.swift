@@ -3,11 +3,12 @@ import AppKit
 
 struct SplitContainer: View {
     let branch: SplitBranch
-    let focusedID: UUID?
-    let isActiveTab: Bool
-    let onFocus: (UUID) -> Void
+    let focusedAreaID: UUID?
+    let isActiveProject: Bool
+    let onFocusArea: (UUID) -> Void
+    let onCloseTab: (UUID, UUID) -> Void
     let onSplit: (UUID, SplitDirection) -> Void
-    let onClose: (UUID) -> Void
+    let onCloseArea: (UUID) -> Void
 
     var body: some View {
         GeometryReader { geo in
@@ -49,6 +50,14 @@ struct SplitContainer: View {
     }
 
     private func child(_ node: SplitNode) -> some View {
-        PaneNode(node: node, focusedID: focusedID, isActiveTab: isActiveTab, onFocus: onFocus, onSplit: onSplit, onClose: onClose)
+        PaneNode(
+            node: node,
+            focusedAreaID: focusedAreaID,
+            isActiveProject: isActiveProject,
+            onFocusArea: onFocusArea,
+            onCloseTab: onCloseTab,
+            onSplit: onSplit,
+            onCloseArea: onCloseArea
+        )
     }
 }

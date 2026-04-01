@@ -1,67 +1,42 @@
 import SwiftUI
 
-struct TabStrip: View {
-    let project: Project?
-    let onAddProject: () -> Void
-    @Environment(AppState.self) private var appState
-
-    private var tabs: [TerminalTab] {
-        guard let project else { return [] }
-        return appState.tabsForProject(project.id)
-    }
-    private var activeID: UUID? {
-        guard let project else { return nil }
-        return appState.activeTabID[project.id]
-    }
+struct PaneTabStrip: View {
+    let area: TabArea
+    let isFocused: Bool
+    let onCloseTab: (UUID) -> Void
+    let onSplit: (SplitDirection) -> Void
+    let onClose: () -> Void
 
     var body: some View {
         HStack(spacing: 0) {
-            HStack {
-                Spacer()
-                IconButton(symbol: "plus", action: onAddProject)
-            }
-            .padding(.horizontal, 8)
-            .frame(width: 160)
-
-            Rectangle().fill(MuxyTheme.border).frame(width: 1)
-
-            ForEach(tabs) { tab in
+            ForEach(area.tabs) { tab in
                 TabCell(
                     title: tab.title,
-                    active: tab.id == activeID,
-                    onSelect: { appState.selectTab(tab.id, projectID: project!.id) },
-                    onClose: { appState.closeTab(tab.id, projectID: project!.id) }
+                    active: tab.id == area.activeTabID,
+                    paneFocused: isFocused,
+                    onSelect: { area.selectTab(tab.id) },
+                    onClose: { onCloseTab(tab.id) }
                 )
             }
 
             Spacer(minLength: 0)
 
-            if let project {
-                HStack(spacing: 0) {
-                    IconButton(symbol: "square.split.2x1") { postSplit(.horizontal) }
-                    IconButton(symbol: "square.split.1x2") { postSplit(.vertical) }
-                    IconButton(symbol: "plus") { appState.createTab(for: project) }
-                }
-                .padding(.trailing, 4)
+            HStack(spacing: 0) {
+                IconButton(symbol: "square.split.2x1") { onSplit(.horizontal) }
+                IconButton(symbol: "square.split.1x2") { onSplit(.vertical) }
+                IconButton(symbol: "plus") { area.createTab() }
             }
+            .padding(.trailing, 4)
         }
         .frame(height: 32)
         .background(MuxyTheme.bg)
-    }
-
-    private func postSplit(_ d: SplitDirection) {
-        guard let project else { return }
-        NotificationCenter.default.post(
-            name: .muxySplitPane,
-            object: nil,
-            userInfo: ["projectID": project.id, "direction": d]
-        )
     }
 }
 
 private struct TabCell: View {
     let title: String
     let active: Bool
+    let paneFocused: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
     @State private var hovered = false
@@ -91,9 +66,9 @@ private struct TabCell: View {
                     .onTapGesture(perform: onClose)
             }
             .overlay(alignment: .top) {
-                if active {
+                if active && paneFocused {
                     Rectangle()
-                        .fill(Color.accentColor)
+                        .fill(MuxyTheme.accent)
                         .frame(height: 2)
                 }
             }

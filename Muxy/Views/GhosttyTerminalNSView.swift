@@ -7,6 +7,7 @@ final class GhosttyTerminalNSView: NSView {
     private let workingDirectory: String
     var onTitleChange: ((String) -> Void)?
     var onFocus: (() -> Void)?
+    var isFocused: Bool = false
 
     private var _markedRange: NSRange = .init(location: NSNotFound, length: 0)
     private var _selectedRange: NSRange = .init(location: NSNotFound, length: 0)
@@ -71,6 +72,8 @@ final class GhosttyTerminalNSView: NSView {
            let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? UInt32 {
             ghostty_surface_set_display_id(surface, displayID)
         }
+
+        ghostty_surface_set_focus(surface, isFocused)
     }
 
     func destroySurface() {
@@ -141,6 +144,11 @@ final class GhosttyTerminalNSView: NSView {
         guard flags.contains(.command) else { return false }
         let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
         return Self.appShortcutKeys.contains(key)
+    }
+
+    func notifySurfaceUnfocused() {
+        guard let surface else { return }
+        ghostty_surface_set_focus(surface, false)
     }
 
     override var acceptsFirstResponder: Bool { true }

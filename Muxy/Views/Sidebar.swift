@@ -5,27 +5,53 @@ struct Sidebar: View {
     @Environment(ProjectStore.self) private var projectStore
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 2) {
-                ForEach(projectStore.projects) { project in
-                    ProjectItem(
-                        project: project,
-                        selected: project.id == appState.activeProjectID,
-                        onSelect: {
-                            appState.activeProjectID = project.id
-                            appState.ensureTabExists(for: project)
-                        },
-                        onRemove: {
-                            appState.removeProject(project.id)
-                            projectStore.remove(id: project.id)
-                        }
-                    )
-                }
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                IconButton(symbol: "plus") { addProject() }
             }
-            .padding(6)
+            .padding(.horizontal, 10)
+            .frame(height: 32)
+
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 2) {
+                    ForEach(projectStore.projects) { project in
+                        ProjectItem(
+                            project: project,
+                            selected: project.id == appState.activeProjectID,
+                            onSelect: {
+                                appState.activeProjectID = project.id
+                                appState.ensureWorkspaceExists(for: project)
+                            },
+                            onRemove: {
+                                appState.removeProject(project.id)
+                                projectStore.remove(id: project.id)
+                            }
+                        )
+                    }
+                }
+                .padding(6)
+            }
         }
         .frame(width: 160)
         .background(MuxyTheme.bg)
+    }
+
+    private func addProject() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.message = "Select a project folder"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let project = Project(
+            name: url.lastPathComponent,
+            path: url.path(percentEncoded: false),
+            sortOrder: projectStore.projects.count
+        )
+        projectStore.add(project)
+        appState.activeProjectID = project.id
+        appState.ensureWorkspaceExists(for: project)
     }
 }
 

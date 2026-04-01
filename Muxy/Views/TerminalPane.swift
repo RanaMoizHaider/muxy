@@ -24,6 +24,7 @@ struct TerminalBridge: NSViewRepresentable {
 
     func makeNSView(context: Context) -> GhosttyTerminalNSView {
         let view = GhosttyTerminalNSView(workingDirectory: state.projectPath)
+        view.isFocused = focused
         view.onFocus = onFocus
         view.onTitleChange = { [weak state] title in
             state?.title = title
@@ -41,9 +42,13 @@ struct TerminalBridge: NSViewRepresentable {
         nsView.onFocus = onFocus
         let wasFocused = context.coordinator.wasFocused
         context.coordinator.wasFocused = focused
-        guard focused, !wasFocused else { return }
-        DispatchQueue.main.async {
-            nsView.window?.makeFirstResponder(nsView)
+        nsView.isFocused = focused
+        if focused && !wasFocused {
+            DispatchQueue.main.async {
+                nsView.window?.makeFirstResponder(nsView)
+            }
+        } else if !focused && wasFocused {
+            nsView.notifySurfaceUnfocused()
         }
     }
 }
