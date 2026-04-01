@@ -20,6 +20,8 @@ final class GhosttyService {
             unsetenv("NO_COLOR")
         }
 
+        resolveGhosttyResources()
+
         let result = ghostty_init(UInt(CommandLine.argc), CommandLine.unsafeArgv)
         guard result == GHOSTTY_SUCCESS else {
             print("[Muxy] ghostty_init failed: \(result)")
@@ -76,5 +78,21 @@ final class GhosttyService {
     func tick() {
         guard let app else { return }
         ghostty_app_tick(app)
+    }
+
+    private func resolveGhosttyResources() {
+        guard getenv("GHOSTTY_RESOURCES_DIR") == nil else { return }
+
+        let candidates = [
+            "/Applications/Ghostty.app/Contents/Resources/ghostty",
+            "\(NSHomeDirectory())/Applications/Ghostty.app/Contents/Resources/ghostty"
+        ]
+
+        for path in candidates {
+            if FileManager.default.fileExists(atPath: "\(path)/shell-integration") {
+                setenv("GHOSTTY_RESOURCES_DIR", path, 1)
+                return
+            }
+        }
     }
 }
