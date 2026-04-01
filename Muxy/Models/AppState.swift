@@ -24,6 +24,7 @@ final class AppState {
     var activeProjectID: UUID? {
         didSet { saveSelection() }
     }
+    var sidebarVisible = true
     var workspaceRoots: [UUID: SplitNode] = [:]
     var focusedAreaID: [UUID: UUID] = [:]
     private var focusHistory: [UUID: [UUID]] = [:]

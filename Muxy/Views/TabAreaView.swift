@@ -4,6 +4,7 @@ struct TabAreaView: View {
     let area: TabArea
     let isFocused: Bool
     let isActiveProject: Bool
+    let showTabStrip: Bool
     let onFocus: () -> Void
     let onSelectTab: (UUID) -> Void
     let onCreateTab: () -> Void
@@ -13,17 +14,19 @@ struct TabAreaView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PaneTabStrip(
-                area: area,
-                isFocused: isFocused,
-                onFocus: onFocus,
-                onSelectTab: onSelectTab,
-                onCreateTab: onCreateTab,
-                onCloseTab: onCloseTab,
-                onSplit: onSplit,
-                onClose: onClose
-            )
-            Rectangle().fill(MuxyTheme.border).frame(height: 1)
+            if showTabStrip {
+                PaneTabStrip(
+                    area: area,
+                    isFocused: isFocused,
+                    onFocus: onFocus,
+                    onSelectTab: onSelectTab,
+                    onCreateTab: onCreateTab,
+                    onCloseTab: onCloseTab,
+                    onSplit: onSplit,
+                    onClose: onClose
+                )
+                Rectangle().fill(MuxyTheme.border).frame(height: 1)
+            }
             ZStack {
                 ForEach(area.tabs) { tab in
                     let isActive = tab.id == area.activeTabID

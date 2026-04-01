@@ -1,41 +1,25 @@
 import SwiftUI
 
-struct Sidebar: View {
+struct SidebarToolbar: View {
     @Environment(AppState.self) private var appState
     @Environment(ProjectStore.self) private var projectStore
     @State private var showThemePicker = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                IconButton(symbol: "paintpalette") { showThemePicker.toggle() }
-                    .popover(isPresented: $showThemePicker) { ThemePicker() }
-                IconButton(symbol: "plus") { addProject() }
-            }
-            .padding(.horizontal, 10)
-            .frame(height: 32)
-            .background(WindowDragRepresentable())
-
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 2) {
-                    ForEach(projectStore.projects) { project in
-                        ProjectItem(
-                            project: project,
-                            selected: project.id == appState.activeProjectID,
-                            onSelect: { appState.selectProject(project) },
-                            onRemove: {
-                                appState.removeProject(project.id)
-                                projectStore.remove(id: project.id)
-                            }
-                        )
-                    }
+        HStack(spacing: 4) {
+            Spacer()
+            IconButton(symbol: "paintpalette") { showThemePicker.toggle() }
+                .popover(isPresented: $showThemePicker) { ThemePicker() }
+            IconButton(symbol: "plus") { addProject() }
+            IconButton(symbol: "sidebar.left") {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    appState.sidebarVisible.toggle()
                 }
-                .padding(6)
             }
         }
-        .frame(width: 160)
-        .background(MuxyTheme.bg)
+        .padding(.horizontal, 10)
+        .frame(height: 32)
+        .background(WindowDragRepresentable())
     }
 
     private func addProject() {
@@ -52,6 +36,30 @@ struct Sidebar: View {
         )
         projectStore.add(project)
         appState.selectProject(project)
+    }
+}
+
+struct Sidebar: View {
+    @Environment(AppState.self) private var appState
+    @Environment(ProjectStore.self) private var projectStore
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 2) {
+                ForEach(projectStore.projects) { project in
+                    ProjectItem(
+                        project: project,
+                        selected: project.id == appState.activeProjectID,
+                        onSelect: { appState.selectProject(project) },
+                        onRemove: {
+                            appState.removeProject(project.id)
+                            projectStore.remove(id: project.id)
+                        }
+                    )
+                }
+            }
+            .padding(6)
+        }
     }
 }
 

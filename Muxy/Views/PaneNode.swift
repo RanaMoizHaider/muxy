@@ -4,6 +4,7 @@ struct PaneNode: View {
     let node: SplitNode
     let focusedAreaID: UUID?
     let isActiveProject: Bool
+    var showTabStrip = true
     let onFocusArea: (UUID) -> Void
     let onSelectTab: (UUID, UUID) -> Void
     let onCreateTab: (UUID) -> Void
@@ -18,6 +19,7 @@ struct PaneNode: View {
                 area: area,
                 isFocused: focusedAreaID == area.id,
                 isActiveProject: isActiveProject,
+                showTabStrip: showTabStrip,
                 onFocus: { onFocusArea(area.id) },
                 onSelectTab: { tabID in onSelectTab(area.id, tabID) },
                 onCreateTab: { onCreateTab(area.id) },

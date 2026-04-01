@@ -5,12 +5,19 @@ struct TerminalArea: View {
     let isActiveProject: Bool
     @Environment(AppState.self) private var appState
 
+    private var rootIsTabArea: Bool {
+        guard let root = appState.workspaceRoot(for: project.id) else { return false }
+        if case .tabArea = root { return true }
+        return false
+    }
+
     var body: some View {
         if let root = appState.workspaceRoot(for: project.id) {
             PaneNode(
                 node: root,
                 focusedAreaID: appState.focusedAreaID[project.id],
                 isActiveProject: isActiveProject,
+                showTabStrip: !rootIsTabArea,
                 onFocusArea: { areaID in
                     appState.dispatch(.focusArea(projectID: project.id, areaID: areaID))
                 },

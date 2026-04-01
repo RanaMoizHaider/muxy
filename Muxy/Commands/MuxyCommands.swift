@@ -4,6 +4,22 @@ struct MuxyCommands: Commands {
     let appState: AppState
 
     var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            Button("Open Configuration...") {
+                NSWorkspace.shared.open(
+                    [MuxyConfig.shared.ghosttyConfigURL],
+                    withApplicationAt: URL(fileURLWithPath: "/System/Applications/TextEdit.app"),
+                    configuration: NSWorkspace.OpenConfiguration()
+                )
+            }
+            .keyboardShortcut(",", modifiers: .command)
+
+            Button("Reload Configuration") {
+                GhosttyService.shared.reloadConfig()
+            }
+            .keyboardShortcut("r", modifiers: [.command, .shift])
+        }
+
         CommandGroup(replacing: .pasteboard) {
             Button("Cut") { NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil) }
                 .keyboardShortcut("x", modifiers: .command)
@@ -60,6 +76,15 @@ struct MuxyCommands: Commands {
                 }
                 .keyboardShortcut(KeyEquivalent(Character("\(index)")), modifiers: .command)
             }
+        }
+
+        CommandGroup(after: .sidebar) {
+            Button(appState.sidebarVisible ? "Hide Sidebar" : "Show Sidebar") {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    appState.sidebarVisible.toggle()
+                }
+            }
+            .keyboardShortcut("b", modifiers: .command)
         }
 
         CommandGroup(after: .toolbar) {
